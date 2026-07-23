@@ -2445,6 +2445,11 @@ async def main():
     # ── Register callback router (catch-all for non-conversation callbacks) ──
     app.add_handler(CallbackQueryHandler(callback_router))
     
+async def unknown_text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Fallback handler for unknown text messages."""
+    await update.message.reply_text(
+        "❓ Use /start to see the menu."
+    )# ── Register document handler for name.txt ──
     # ── Register document handler for name.txt ──
     app.add_handler(MessageHandler(
         filters.Document.FileExtension("txt") & ~filters.COMMAND,
@@ -2454,10 +2459,7 @@ async def main():
     # ── Register fallback for text messages ──
     app.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,
-        async def unknown_text(update, context):
-            await update.message.reply_text(
-                "❓ Use /start to see the menu."
-            )
+        unknown_text_handler
     ))
     
     # ── Set bot commands ──
@@ -2489,6 +2491,5 @@ if __name__ == "__main__":
         logger.info("Bot stopped by user")
     except Exception as e:
         logger.error(f"Fatal error: {e}")
-
-
-print("✅ PART 6 — MAIN ENTRY POINT READY")
+        
+    
