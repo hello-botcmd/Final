@@ -1409,6 +1409,7 @@ async def receive_view_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return VIEW_COUNT
 
 
+
 async def receive_view_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive view count and execute view boost."""
     user_id = update.effective_user.id
@@ -1432,9 +1433,16 @@ async def receive_view_count(update: Update, context: ContextTypes.DEFAULT_TYPE)
     links = context.user_data['view_links']
     accounts = await db.get_connected_accounts()
     
+    # --- FIX: Proper logic instead of empty if block ---
     if len(accounts) < views_per_post:
-        # Each account views once, so we need enough accounts
-        # Actually for view boost, we use multiple sessions per account
+        await update.message.reply_text(
+            premium_text(f"⚠️ **Not enough accounts for {views_per_post} views per post.**\n"
+                         f"Available: {len(accounts)}\n\n"
+                         f"Each account can view once, so max {len(accounts)} views per post.\n"
+                         f"Continuing with **{len(accounts)} views** per post instead."),
+            parse_mode=ParseMode.MARKDOWN
+        )
+        views_per_post = len(accounts)
     
     msg = await update.message.reply_text(
         premium_text(f"🚀 **Starting View Boost**\n\n"
@@ -1446,7 +1454,6 @@ async def receive_view_count(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     cancel_flags[user_id] = False
     
-    # Run in background
     task = asyncio.create_task(
         run_view_boost(user_id, accounts, links, views_per_post, msg)
     )
